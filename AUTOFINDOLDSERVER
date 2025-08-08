@@ -221,6 +221,17 @@ task.spawn(function()
     copyJobId()
     sendWebhook()
 
+    -- Auto hop if server is full (5/5 players)
+    local currentPlayers = #Players:GetPlayers()
+    local maxPlayers = Players.MaxPlayers or 5
+
+    if currentPlayers >= maxPlayers then
+        statusLabel.Text = "⚠️ Server is full (" .. currentPlayers .. "/" .. maxPlayers .. "). Auto hopping..."
+        task.wait(2)
+        tryServerHop()
+        return
+    end
+
     while true do
         task.wait(0.5)
         if hopRequested then
