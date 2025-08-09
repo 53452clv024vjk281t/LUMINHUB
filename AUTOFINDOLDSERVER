@@ -1,4 +1,4 @@
-local desiredVersion = "1689"
+local desiredVersion = "1706"
 local PlaceId = game.PlaceId
 local AUTO_HOP_LOOP = false       -- Disabled as requested
 local AUTO_TELEPORT_LOOP = false  -- Disabled as requested
