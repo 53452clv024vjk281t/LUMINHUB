@@ -23,7 +23,7 @@ repeat task.wait() until game:IsLoaded()
 -- === ONLY update version text if players in server are 3 or 4 ===
 local playerCount = #Players:GetPlayers()
 if playerCount == 3 or playerCount == 4 then
-    local newVersionText = "v1681"
+    local newVersionText = "v1760"
 
     local function changeVersionText(parent)
         for _, child in ipairs(parent:GetChildren()) do
